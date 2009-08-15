@@ -50,6 +50,7 @@ class Diff(models.Model):
         if self.revision: qs = qs.filter(revision__lte=self.revision)
         return qs
         
+    # TODO: Rewrite to get only needed diffs, make a function
     @property
     def diff_history(self):
         '''

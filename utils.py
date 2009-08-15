@@ -37,19 +37,43 @@ def load_diff(source, diff):
         else:
             raise AttributeError(u'Not correct diff in input!')
     return ''.join(dest)
-    
-    
 
-def get_queryset_and_model(queryset_or_model):
-    """
-    Given a ``QuerySet`` or a ``Model``, returns a two-tuple of
-    (queryset, model).
+def _fill_lists(source_list, dest_list):
+    # Need to be improved
+    plm = len(source_list) - len(dest_list)
+    if plm > 0:
+        dest_list += [None] * plm
+    elif plm < 0:
+        source_list += [None] * (-plm)
 
-    If a ``Model`` is given, the ``QuerySet`` returned will be created
-    using its default manager.
-    """
-    try:
-        return queryset_or_model, queryset_or_model.model
-    except AttributeError:
-        return queryset_or_model._default_manager.all(), queryset_or_model
+def diff_to_lists(source, dest):
+    '''
+    Sorts diff into two columns
+    '''
+    last = ''
+    last_not_changed = None
+    source_list, dest_list = [], []
+    
+    for diffline in ndiff(source.splitlines(1), dest.splitlines(1)):
+        if char == ' ':
+            if last in '+-':
+                _fill_lists(source_list, dest_list)
+                
+                source_list.append(diffline)
+                dest_list.append(diffline)
+                last_not_changed = None
+            else:
+                last_not_changed = diffline
+        elif char == '-':
+            source_list.append(diffline)
+        elif char == '+':
+            dest_list.append(diffline)
+        elif char == '?':
+            char = last
+        else:
+            raise AttributeError(u'Not correct diff in input!')
+        last = char
+        
+    _fill_lists(source_list, dest_list)
+    return (source_list, dest_list)
 

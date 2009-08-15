@@ -17,6 +17,8 @@ class DiffField(TextField):
     """
     def __init__(self, *args, **kwargs):
         kwargs['default'] = kwargs.get('default', '')
+        kwargs['blank'] = False  #Until tested
+        kwargs['null'] = False
         super(DiffField, self).__init__(*args, **kwargs)
 
     def contribute_to_class(self, cls, name):
