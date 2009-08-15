@@ -61,11 +61,15 @@ class DiffField(TextField):
         text = self._get_instance_text_cache(instance)
         dic = self.__dict__
         if text != self.value:
-            if settings.SAVE_FULL_TEXT:
+            prd = settings.SAVE_TEXT_CACHE_PERIOD
+            cnt = Diff.objects.get_for_object(instance).count()
+            is_text = prd and not cnt % prd
+            # if caching is on and it's time to cache (every `prd` diffs)
+            if is_text:
                 diff = text
             else:
                 diff = get_diff(self.value, text)
-            Diff(object=instance, diff=diff).save()
+            Diff(object=instance, diff=diff, is_diff=not is_text).save()
         self.value = text
 
     def _get_instance_text_cache(self, instance):

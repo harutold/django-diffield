@@ -35,22 +35,28 @@ class Diff(models.Model):
     """
     A diff between two editions
     """
-    diff = models.TextField(_('diff'))
-    # TODO: May be, include caching text every N diffs
+    diff = models.TextField(_('diff or text'))
+    is_diff = models.BooleanField(_('is diff, otherwise is text'))
     content_type = models.ForeignKey(ContentType, verbose_name=_('content type'))
     object_id    = models.PositiveIntegerField(_('object id'), db_index=True)
     object       = generic.GenericForeignKey('content_type', 'object_id')
     user         = models.ForeignKey(User, verbose_name=_('diff author'), blank=True, null=True)
+    revision     = models.PositiveIntegerField(_('revision'), db_index=True)
 
     objects = DiffManager()
 
+    def get_history_queryset(self):
+        qs = Diff.objects.get_for_object(self.object)
+        if self.revision: qs = qs.filter(revision__lte=self.revision)
+        return qs
+        
     @property
     def diff_history(self):
         '''
         Always return a list (not QuerySet) of older diffs including self
         '''
         if not hasattr(self, '_diff_history'):
-            self._diff_history = Diff.objects.get_for_object(self.object).filter(pk__lte=self.pk).order_by('pk')
+            self._diff_history = self.get_history_queryset()
             self._diff_history = list(self._diff_history)
         return self._diff_history
 
@@ -59,7 +65,7 @@ class Diff(models.Model):
         '''
         Text in version of this diff
         '''
-        if settings.SAVE_FULL_TEXT:
+        if not self.is_diff:
             return self.diff
         else:
             if not hasattr(self, '_txt'):
@@ -74,12 +80,14 @@ class Diff(models.Model):
             return self._txt
         
     def save(self, *args, **kwargs):
+        if not self.revision:
+            self.revision = self.get_history_queryset().count() + 1
         if settings.TRACK_USERS and not self.user_id:
             self.user = settings.get_current_user()
         super(Diff, self).save(*args, **kwargs)
             
     class Meta:
-        ordering = ('id',)
+        ordering = ('revision',)
         verbose_name = _('diff')
         verbose_name_plural = _('diffs')
 

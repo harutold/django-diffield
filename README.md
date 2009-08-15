@@ -24,9 +24,15 @@ Usage
         .....
     )
     
-    # Save full text in history, not diffs
+    # Save full text in history, not diffs (in every diff)
     DIFF_SAVE_FULL_TEXT = False
-
+    
+    # Enable periodic text caching in database (every N revisions)
+    DIFF_CACHE_TEXT = True
+    
+    # Save full text every SAVE_TEXT_CACHE_PERIOD times (the period of caching)
+    DIFF_SAVE_TEXT_CACHE_PERIOD = 50
+    
     # Track users' contribution (save diffs' authors)
     DIFF_TRACK_USERS = True
 

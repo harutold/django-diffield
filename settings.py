@@ -8,6 +8,16 @@ from django.conf import settings
 
 # Save full text in history, not diffs
 SAVE_FULL_TEXT = getattr(settings, 'DIFF_SAVE_FULL_TEXT', False)
+CACHE_TEXT = getattr(settings, 'DIFF_CACHE_TEXT', True)
+
+if SAVE_FULL_TEXT:
+    SAVE_TEXT_CACHE_PERIOD = 1
+elif not CACHE_TEXT:
+    SAVE_TEXT_CACHE_PERIOD = 0
+else:
+    # Save full text every SAVE_TEXT_CACHE_PERIOD times
+    SAVE_TEXT_CACHE_PERIOD = getattr(settings, 'DIFF_SAVE_TEXT_CACHE_PERIOD', 50)
+
 
 # Track users' contribution
 TRACK_USERS = getattr(settings, 'DIFF_TRACK_USERS', True)
